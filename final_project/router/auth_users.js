@@ -61,7 +61,11 @@ regd_users.post("/login", (req, res) => {
 regd_users.put("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
     const username = req.session.authorization ? req.session.authorization.username : null;
-    const review = req.query.review;
+    const review = req.body.review;
+  
+    if (!username) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
   
     if (books[isbn]) {
       if (!books[isbn].reviews) {
@@ -78,13 +82,19 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   regd_users.delete("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
     const username = req.session.authorization ? req.session.authorization.username : null;
-    const review = req.query.review
-    
-    if (books[isbn] && books[isbn].review && books[isbn].review[username]) {
-      delete books[isbn].review[username];
-      return res.status(200).json({ message: 'Review deleted successfully' });
+  
+    if (!username) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+  
+    if (books[isbn]) {
+      if (!books[isbn].reviews) {
+        books[isbn].reviews = {};
+      }
+      delete books[isbn].reviews[username];
+      return res.status(200).json({ message: `Review for book with ISBN ${isbn} deleted successfully` });
     } else {
-      return res.status(404).json({ error: "Review not found" });
+      return res.status(404).json({ message: "Book not found" });
     }
   });
   
